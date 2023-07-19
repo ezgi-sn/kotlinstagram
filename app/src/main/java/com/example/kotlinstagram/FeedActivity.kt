@@ -6,6 +6,8 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.kotlinstagram.adapter.FeedRecyclerAdapter
 import com.example.kotlinstagram.databinding.ActivityFeedBinding
 import com.example.kotlinstagram.databinding.ActivityMainBinding
 import com.example.kotlinstagram.model.Post
@@ -20,6 +22,7 @@ class FeedActivity : AppCompatActivity() {
     private lateinit var auth: FirebaseAuth
     private lateinit var db : FirebaseFirestore
     private lateinit var postArrayList: ArrayList<Post>
+    private lateinit var feedAdapter : FeedRecyclerAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,6 +33,10 @@ class FeedActivity : AppCompatActivity() {
         setContentView(view)
         postArrayList = ArrayList<Post>()
         getData()
+
+        binding.recyclerView.layoutManager = LinearLayoutManager(this)
+        feedAdapter = FeedRecyclerAdapter(postArrayList)
+        binding.recyclerView.adapter = feedAdapter
     }
 
     private fun getData(){
@@ -49,6 +56,7 @@ class FeedActivity : AppCompatActivity() {
                             val post=Post(userEmail,comment,downloadUrl)
                             postArrayList.add(post)
                         }
+                        feedAdapter.notifyDataSetChanged()
                     }
                 }
             }
