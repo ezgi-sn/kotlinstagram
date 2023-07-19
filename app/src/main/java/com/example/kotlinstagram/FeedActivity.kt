@@ -5,21 +5,54 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.Toast
 import com.example.kotlinstagram.databinding.ActivityFeedBinding
 import com.example.kotlinstagram.databinding.ActivityMainBinding
+import com.example.kotlinstagram.model.Post
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
 class FeedActivity : AppCompatActivity() {
     private lateinit var binding: ActivityFeedBinding
     private lateinit var auth: FirebaseAuth
+    private lateinit var db : FirebaseFirestore
+    private lateinit var postArrayList: ArrayList<Post>
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityFeedBinding.inflate(layoutInflater)
         val view = binding.root
         auth = Firebase.auth
+        db = Firebase.firestore
         setContentView(view)
+        postArrayList = ArrayList<Post>()
+        getData()
+    }
+
+    private fun getData(){
+        db.collection("Posts").addSnapshotListener { value, error ->
+            if (error!=null){
+                Toast.makeText(this,error.localizedMessage,Toast.LENGTH_LONG).show()
+            }
+            else{
+                if (value!=null){
+                    if (!value.isEmpty){
+                        val documents = value.documents
+                        for (document in documents){
+                            val comment = document.get("comment") as String
+                            val userEmail = document.get("userEmail") as String
+                            val downloadUrl = document.get("downloadURL") as String
+
+                            val post=Post(userEmail,comment,downloadUrl)
+                            postArrayList.add(post)
+                        }
+                    }
+                }
+            }
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {

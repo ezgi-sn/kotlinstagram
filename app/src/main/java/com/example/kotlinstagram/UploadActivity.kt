@@ -16,9 +16,12 @@ import androidx.core.view.accessibility.AccessibilityEventCompat.setAction
 import com.example.kotlinstagram.databinding.ActivityMainBinding
 import com.example.kotlinstagram.databinding.ActivityUploadBinding
 import com.google.android.material.snackbar.Snackbar
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
+
+import java.time.Instant.now
 import java.util.*
 
 class UploadActivity : AppCompatActivity() {
@@ -103,8 +106,24 @@ class UploadActivity : AppCompatActivity() {
             val ref = storage.reference
             val imageReference = ref.child("images/${imageName}.jpg")
             if(selectedPicture!=null){
-                imageReference.putFile(selectedPicture!!).addOnCanceledListener {
+                imageReference.putFile(selectedPicture!!).addOnSuccessListener {
 
+                val uploadPicRef = storage.reference.child("images/${imageName}.jpg")
+                uploadPicRef.downloadUrl.addOnSuccessListener {
+                    val downloadUrl = it.toString()
+                    println("deneme")
+                    val postMap = hashMapOf<String,Any>()
+                    postMap.put("downloadURL", downloadUrl)
+                    postMap.put("userEmail", auth.currentUser!!.email!!)
+                    postMap.put("comment", binding.commentText.text.toString())
+                    postMap.put("date", Timestamp.now())
+
+                    firestore.collection("Posts").add(postMap).addOnSuccessListener {
+                    finish()
+                    }.addOnFailureListener {
+                        Toast.makeText(this,it.localizedMessage, Toast.LENGTH_LONG).show()
+                    }
+                }
                 }.addOnFailureListener{
                     Toast.makeText(this, it.localizedMessage, Toast.LENGTH_LONG).show()
                 }
